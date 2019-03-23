@@ -1316,7 +1316,11 @@ struct fibonacci_hash_policy
 {
     size_t index_for_hash(size_t hash, size_t /*num_slots_minus_one*/) const
     {
+#ifdef ENV64BIT
         return (11400714819323198485ull * hash) >> shift;
+#else
+        return (2654435769u * hash) >> shift;
+#endif
     }
     size_t keep_in_range(size_t index, size_t num_slots_minus_one) const
     {
@@ -1326,7 +1330,7 @@ struct fibonacci_hash_policy
     int8_t next_size_over(size_t & size) const
     {
         size = std::max(size_t(2), detailv3::next_power_of_two(size));
-        return 64 - detailv3::log2(size);
+        return sizeof(size_t) * CHAR_BIT - detailv3::log2(size);
     }
     void commit(int8_t shift)
     {
@@ -1334,11 +1338,11 @@ struct fibonacci_hash_policy
     }
     void reset()
     {
-        shift = 63;
+        shift = sizeof(size_t) * CHAR_BIT - 1;
     }
 
 private:
-    int8_t shift = 63;
+    int8_t shift = sizeof(size_t) * CHAR_BIT - 1;
 };
 
 template<typename K, typename V, typename H = std::hash<K>, typename E = std::equal_to<K>, typename A = std::allocator<std::pair<K, V> > >
